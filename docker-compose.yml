@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: ai_data_agent_app
+    ports:
+      - "8501:8501"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-ai-data-agent-production-secret-key-change-in-env-2026}
+    volumes:
+      - session_data:/app/.sessions
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: ai_data_agent_api
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - JWT_SECRET=${JWT_SECRET:-ai-data-agent-production-secret-key-change-in-env-2026}
+    volumes:
+      - session_data:/app/.sessions
+    restart: unless-stopped
+
+volumes:
+  session_data:

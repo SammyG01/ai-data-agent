@@ -1,0 +1,12 @@
+order_id,product_category,region,revenue,order_date,customer_name
+101,Electronics,Lagos,45000.00,2024-01-15, John Doe 
+102,Clothing,Abuja,12000.50,16/01/2024,Jane Smith
+103,Electronics,lagos,45000.00,2024-01-15,John Doe
+104,Groceries,Kano,8500.00,2024-01-18,Amina Bello
+104,Groceries,Kano,8500.00,2024-01-18,Amina Bello
+105,Electronics,Lagos,95000.00,2024-01-20,Chidi Okeke
+106,Clothing,Port Harcourt,,2024-01-22,Femi Adebayo
+107,Groceries,LAGOS,3200.00,23/01/2024,Musa Ibrahim
+108,Electronics,Abuja,62000.00,2024-01-25,
+109,Clothing,Kano,15000.00,2024-01-28,Nneka Eze
+109,Clothing,Kano,15000.00,2024-01-28,Nneka Eze
