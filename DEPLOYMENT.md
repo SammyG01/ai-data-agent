@@ -1,60 +1,46 @@
-# Zero-Cost Production Cloud Deployment Guide
+# Zero-Cost Production Cloud Deployment Guide (OpenAI)
 
-This guide walks you through deploying the **AI Data Analytics & Entry Agent** to production cloud platforms completely within free tiers.
-
----
-
-## Option 1: Deploy on Render.com (Recommended — 100% Free)
-
-Render provides free hosting for web services with automatic HTTPS and Git-based continuous deployment.
-
-### Steps:
-1. **Push your code to GitHub**:
-   - Create a new GitHub repository (e.g. `ai-data-agent`).
-   - Push your project code:
-     ```bash
-     git init
-     git add .
-     git commit -m "Initial release"
-     git branch -M main
-     git remote add origin https://github.com/<your-username>/ai-data-agent.git
-     git push -u origin main
-     ```
-
-2. **Create a Free Web Service on Render**:
-   - Sign up at [Render.com](https://render.com) (free).
-   - Click **New +** $\rightarrow$ **Web Service**.
-   - Connect your GitHub repository.
-   - Configure the service:
-     - **Name**: `ai-data-agent`
-     - **Runtime**: `Python 3`
-     - **Build Command**: `pip install -r requirements.txt`
-     - **Start Command**: `streamlit run streamlit_app.py --server.port 10000 --server.address 0.0.0.0`
-     - **Instance Type**: `Free`
-
-3. **Set Environment Variables on Render**:
-   - Under the **Environment** tab, add:
-     - `ANTHROPIC_API_KEY`: `your_anthropic_api_key_here`
-     - `JWT_SECRET`: `a-random-secure-string-for-tokens`
-
-4. **Deploy**:
-   - Click **Create Web Service**. Within ~2 minutes, your agent is live at `https://ai-data-agent.onrender.com`!
+This guide walks you through deploying the **AI Data Analytics & Entry Agent** powered by **OpenAI** to production cloud platforms completely within free tiers.
 
 ---
 
-## Option 2: Deploy on Hugging Face Spaces (Free Streamlit Hosting)
+## Option 1: Deploy on Streamlit Community Cloud (Recommended — 3 Clicks)
 
-Hugging Face Spaces offers dedicated free hosting specifically optimized for Streamlit applications.
+Streamlit Cloud provides free hosting built specifically for Streamlit apps.
 
 ### Steps:
-1. Sign up at [Hugging Face](https://huggingface.co).
-2. Click **Spaces** $\rightarrow$ **Create new Space**.
-3. Set **Space SDK** to `Streamlit`.
-4. License: `MIT` or `OpenRAIL`.
-5. Under **Settings** $\rightarrow$ **Repository secrets**, add:
-   - `ANTHROPIC_API_KEY`: `your_key`
-6. Push your files or connect your GitHub repo.
-7. Your app is live with permanent cloud URL!
+1. Go to [share.streamlit.io](https://share.streamlit.io) and log in with GitHub (`SammyG01`).
+2. Click **"New app"**.
+3. Select your repository:
+   - **Repository:** `SammyG01/ai-data-agent`
+   - **Branch:** `main`
+   - **Main file path:** `streamlit_app.py`
+4. Click **"Advanced settings"** $\rightarrow$ **"Secrets"**, and paste:
+   ```toml
+   OPENAI_API_KEY = "your-openai-api-key-here"
+   OPENAI_MODEL = "gpt-4o-mini"
+   JWT_SECRET = "ai-data-agent-production-secret-2026"
+   ```
+5. Click **"Deploy!"**
+Your app will be live with a permanent public link like `https://ai-data-agent-sammyg01.streamlit.app`.
+
+---
+
+## Option 2: Deploy on Render.com (Full Web Service)
+
+1. Sign up at [Render.com](https://render.com) (free).
+2. Click **New +** $\rightarrow$ **Web Service**.
+3. Connect your GitHub repository `SammyG01/ai-data-agent`.
+4. Configure:
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `streamlit run streamlit_app.py --server.port 10000 --server.address 0.0.0.0`
+   - **Instance Type**: `Free`
+5. In **Environment Variables**, add:
+   - `OPENAI_API_KEY`: `your-openai-api-key-here`
+   - `OPENAI_MODEL`: `gpt-4o-mini`
+   - `JWT_SECRET`: `ai-data-agent-production-secret-2026`
+6. Click **Create Web Service**.
 
 ---
 
@@ -62,10 +48,7 @@ Hugging Face Spaces offers dedicated free hosting specifically optimized for Str
 
 Run anywhere using Docker Compose:
 ```bash
-# Set your API key
-export ANTHROPIC_API_KEY="your_api_key"
-
-# Build and run in background
+export OPENAI_API_KEY="your-openai-api-key-here"
 docker compose up -d --build
 ```
 Access the application at:

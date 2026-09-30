@@ -1,7 +1,7 @@
 import os
 import re
 from typing import Tuple, Dict, Any, Optional, List
-import anthropic
+from openai import OpenAI
 
 SYSTEM_PROMPT_TEMPLATE = """You are a SQL generation engine. Your only job is to convert a natural language question into a single valid DuckDB SQL query that answers it, based on the schema, semantic descriptions, and sample data provided.
 
@@ -83,7 +83,6 @@ def validate_query_intent(sql: str, allowed_columns: List[str]) -> Tuple[bool, O
     if "UNANSWERABLE" in sql.upper():
         return True, None
 
-    # Basic token check to ensure table or valid columns are referenced
     upper_sql = sql.upper()
     if "FROM DATASET" not in upper_sql and "FROM \"DATASET\"" not in upper_sql:
         return False, "Query does not query the 'dataset' table."
@@ -92,20 +91,21 @@ def validate_query_intent(sql: str, allowed_columns: List[str]) -> Tuple[bool, O
 
 class NLToSQLConverter:
     """
-    Handles translation from Natural Language question to DuckDB SQL query using Anthropic Claude API,
+    Handles translation from Natural Language question to DuckDB SQL query using OpenAI API,
     with strict validation, semantic dictionary enrichment, few-shot memory, and 1-shot retry logic.
     """
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.model = model or os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
         if self.api_key:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
+            self.client = OpenAI(api_key=self.api_key)
         else:
             self.client = None
 
     def generate_sql(self, user_question: str, schema_description: str, sample_rows: str, few_shot_context: str = "") -> str:
-        """Calls Claude API to get initial SQL generation."""
+        """Calls OpenAI API to get initial SQL generation."""
         if not self.client:
-            raise RuntimeError("Anthropic API Key not provided or configured in environment (ANTHROPIC_API_KEY).")
+            raise RuntimeError("OpenAI API Key not provided or configured in environment (OPENAI_API_KEY).")
 
         system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
             schema_description=schema_description,
@@ -113,21 +113,21 @@ class NLToSQLConverter:
             few_shot_context=few_shot_context
         )
 
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
-            system=system_prompt,
+        response = self.client.chat.completions.create(
+            model=self.model,
             messages=[
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Question: {user_question}"}
-            ]
+            ],
+            temperature=0
         )
-        raw_text = response.content[0].text
+        raw_text = response.choices[0].message.content or ""
         return sanitize_and_clean_sql(raw_text)
 
     def generate_retry_sql(self, user_question: str, failed_sql: str, error_message: str, schema_description: str) -> str:
-        """Calls Claude API to generate a corrected SQL query following an execution error."""
+        """Calls OpenAI API to generate a corrected SQL query following an execution error."""
         if not self.client:
-            raise RuntimeError("Anthropic API Key not provided.")
+            raise RuntimeError("OpenAI API Key not provided.")
 
         prompt = RETRY_PROMPT_TEMPLATE.format(
             error_message=error_message,
@@ -136,14 +136,14 @@ class NLToSQLConverter:
             schema_description=schema_description
         )
 
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
+        response = self.client.chat.completions.create(
+            model=self.model,
             messages=[
                 {"role": "user", "content": prompt}
-            ]
+            ],
+            temperature=0
         )
-        raw_text = response.content[0].text
+        raw_text = response.choices[0].message.content or ""
         return sanitize_and_clean_sql(raw_text)
 
     def convert_and_execute(
@@ -154,11 +154,11 @@ class NLToSQLConverter:
         few_shot_context: str = ""
     ) -> Dict[str, Any]:
         """
-        Full Section 7.2 workflow with semantic layer & few-shot learning:
+        Full Section 7.2 workflow with OpenAI + semantic layer & few-shot learning:
         1. Generate SQL with enriched schema + sample rows + few-shot memory
         2. Validate SELECT-only security & query intent
         3. Execute against DuckDB engine
-        4. If execution fails, retry 1 time using 7.3 retry prompt
+        4. If execution fails, retry 1 time using retry prompt
         5. Return result dict
         """
         schema_desc, sample_rows = engine.get_schema_prompt_description(semantic_annotations)
@@ -170,7 +170,7 @@ class NLToSQLConverter:
             return {
                 "success": False,
                 "sql": "",
-                "error": f"Failed to reach LLM API: {str(e)}",
+                "error": f"Failed to reach OpenAI API: {str(e)}",
                 "df": None
             }
 

@@ -7,7 +7,8 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - JWT_SECRET=${JWT_SECRET:-ai-data-agent-production-secret-key-change-in-env-2026}
     volumes:
       - session_data:/app/.sessions
@@ -20,7 +21,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - JWT_SECRET=${JWT_SECRET:-ai-data-agent-production-secret-key-change-in-env-2026}
     volumes:
       - session_data:/app/.sessions

@@ -1,7 +1,7 @@
 import json
 import os
 from typing import Dict, Any, List, Optional
-import anthropic
+from openai import OpenAI
 import pandas as pd
 from app.core.fix_operations import SUPPORTED_OPERATIONS, execute_approved_fix
 
@@ -33,10 +33,11 @@ Respond ONLY in this JSON structure, nothing else:
 }}"""
 
 class FixSuggester:
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    def __init__(self, api_key: Optional[str] = None, model: Optional[str] = None):
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.model = model or os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
         if self.api_key:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
+            self.client = OpenAI(api_key=self.api_key)
         else:
             self.client = None
 
@@ -51,7 +52,6 @@ class FixSuggester:
         for idx, issue in enumerate(issues):
             issue_type = issue.get("issue_type")
 
-            # Use LLM proposal generator if available
             proposal = None
             if self.client:
                 try:
@@ -59,7 +59,6 @@ class FixSuggester:
                 except Exception:
                     proposal = None
 
-            # Fallback to rule-based heuristic proposal
             if not proposal:
                 proposal = self._heuristic_propose_fix(df, issue)
 
@@ -82,14 +81,19 @@ class FixSuggester:
             sample_affected_rows=sample_before
         )
 
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=1000,
-            messages=[{"role": "user", "content": prompt}]
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are a data quality assistant. Always return valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0
         )
-        raw_json = response.content[0].text.strip()
+        raw_json = (response.choices[0].message.content or "").strip()
         if raw_json.startswith("```"):
-            raw_json = raw_json.split("```")[1]
+            parts = raw_json.split("```")
+            if len(parts) > 1:
+                raw_json = parts[1]
             if raw_json.startswith("json"):
                 raw_json = raw_json[4:]
             raw_json = raw_json.strip()
@@ -138,7 +142,6 @@ class FixSuggester:
                     "preview_after": preview_df.head(3).fillna("").to_dict(orient="records")
                 }
             else:
-                # If mixed casing detected, we can propose standardize_text_format or replace_value_mapping
                 preview_df = execute_approved_fix(df, "standardize_text_format", target_column=target_col, parameters={"casing": "title", "strip_whitespace": True})
                 return {
                     "operation": "standardize_text_format",
