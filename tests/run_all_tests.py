@@ -11,6 +11,7 @@ from tests.test_storage_and_undo import test_session_lifecycle_and_undo
 from tests.test_expanded_operations import test_custom_calculated_column, test_split_column, test_regex_extract, test_replace_value_mapping, test_remove_outliers
 from tests.test_dictionary_prompt import test_data_dictionary_and_few_shot
 from tests.test_auth_and_rbac import test_password_hashing_and_verification, test_jwt_token_lifecycle, test_user_manager_and_roles, test_tenant_session_scoping
+from tests.test_phase3_connectors_and_reporting import test_google_sheets_url_parser, test_dataset_profile_and_reporting, test_voice_transcription_input_validation
 
 def run_tests():
     print("1. Running Engine & Cleaning tests...")
@@ -59,7 +60,13 @@ def run_tests():
     test_tenant_session_scoping()
     print("   [PASS] Auth & RBAC Multi-Tenant tests passed!")
 
-    print("\nALL 8 TEST SUITES (PHASE 1, 1.5, & PHASE 2) PASSED 100% CLEANLY!")
+    print("9. Running Phase 3 Connectors & Reporting tests...")
+    test_google_sheets_url_parser()
+    test_dataset_profile_and_reporting()
+    test_voice_transcription_input_validation()
+    print("   [PASS] Phase 3 Connectors & Reporting tests passed!")
+
+    print("\nALL 9 TEST SUITES (PHASES 1, 1.5, 2, & 3) PASSED 100% CLEANLY!")
 
 if __name__ == "__main__":
     run_tests()

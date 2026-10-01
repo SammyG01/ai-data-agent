@@ -17,9 +17,12 @@ from app.core.dictionary import DataDictionary, FewShotMemory
 from app.core.safe_eval import evaluate_safe_expression
 from app.auth.models import UserManager, init_auth_db
 from app.auth.security import create_access_token
+from app.core.connectors import load_google_sheet, load_sql_database
+from app.core.reporting import generate_executive_digest, generate_report_html
+from app.core.voice import transcribe_audio
 
 st.set_page_config(
-    page_title="AI Data Analytics & Entry Agent (Multi-User SaaS)",
+    page_title="AI Data Analytics & Entry Agent (Phase 3)",
     page_icon="📊",
     layout="wide"
 )
@@ -127,8 +130,8 @@ if "session_id" not in st.session_state or st.session_state["session_id"] != act
     st.session_state["dataset_loaded"] = False
     st.session_state["quality_report"] = None
     st.session_state["proposals"] = []
+    st.session_state["gsheet_url"] = None
 
-    # Attempt to restore persisted session from disk if exists
     saved_df = storage_manager.load_session_df(active_session_id)
     if saved_df is not None:
         meta = storage_manager.get_session_meta(active_session_id)
@@ -141,6 +144,7 @@ if "session_id" not in st.session_state or st.session_state["session_id"] != act
         suggester = FixSuggester()
         st.session_state["proposals"] = suggester.generate_fix_proposals(saved_df, st.session_state["quality_report"])
         st.session_state["dataset_loaded"] = True
+        st.session_state["gsheet_url"] = meta.get("gsheet_url")
 
 # Header & Sidebar
 st.title("📊 AI Data Analytics & Entry Agent")
@@ -154,33 +158,111 @@ with st.sidebar:
 
     st.markdown("---")
     st.header("Dataset Control")
-    uploaded_file = st.file_uploader("Upload CSV or XLSX Dataset", type=["csv", "xlsx", "xls"])
 
-    if uploaded_file is not None:
-        if not st.session_state["dataset_loaded"] or st.button("Re-process Uploaded File"):
-            with st.spinner("Loading file & analyzing data quality..."):
-                ext = uploaded_file.name.split(".")[-1].lower()
-                if ext == "csv":
-                    df = pd.read_csv(uploaded_file)
-                else:
-                    df = pd.read_excel(uploaded_file)
+    data_source = st.radio("Data Ingestion Source", ["File Upload", "Google Sheets", "Database URL"], horizontal=True)
 
-                st.session_state["engine"].load_dataframe(df)
-                st.session_state["dictionary"].initialize_from_df(df)
-                st.session_state["dataset_loaded"] = True
-                st.session_state["quality_report"] = detect_data_quality_issues(df)
+    if data_source == "File Upload":
+        uploaded_file = st.file_uploader("Upload CSV or XLSX Dataset", type=["csv", "xlsx", "xls"])
+        if uploaded_file is not None:
+            if not st.session_state["dataset_loaded"] or st.button("Re-process Uploaded File"):
+                with st.spinner("Loading file & analyzing data quality..."):
+                    ext = uploaded_file.name.split(".")[-1].lower()
+                    if ext == "csv":
+                        df = pd.read_csv(uploaded_file)
+                    else:
+                        df = pd.read_excel(uploaded_file)
 
-                storage_manager.create_or_update_session(
-                    session_id=active_session_id,
-                    df=df,
-                    filename=uploaded_file.name,
-                    user_id=current_user["id"],
-                    metadata={"data_dictionary": st.session_state["dictionary"].get_all()}
-                )
+                    st.session_state["engine"].load_dataframe(df)
+                    st.session_state["dictionary"].initialize_from_df(df)
+                    st.session_state["dataset_loaded"] = True
+                    st.session_state["quality_report"] = detect_data_quality_issues(df)
 
-                suggester = FixSuggester()
-                st.session_state["proposals"] = suggester.generate_fix_proposals(df, st.session_state["quality_report"])
-                st.rerun()
+                    storage_manager.create_or_update_session(
+                        session_id=active_session_id,
+                        df=df,
+                        filename=uploaded_file.name,
+                        user_id=current_user["id"],
+                        metadata={"data_dictionary": st.session_state["dictionary"].get_all()}
+                    )
+
+                    suggester = FixSuggester()
+                    st.session_state["proposals"] = suggester.generate_fix_proposals(df, st.session_state["quality_report"])
+                    st.rerun()
+
+    elif data_source == "Google Sheets":
+        st.caption("Paste a Google Sheet link (Sharing must be 'Anyone with the link can view')")
+        gsheet_input = st.text_input("Google Sheet URL", value=st.session_state.get("gsheet_url") or "")
+        c_load, c_sync = st.columns([1, 1])
+        if c_load.button("Load Sheet", use_container_width=True):
+            if gsheet_input:
+                try:
+                    with st.spinner("Fetching and connecting to Google Sheet..."):
+                        df, name = load_google_sheet(gsheet_input)
+                        st.session_state["engine"].load_dataframe(df)
+                        st.session_state["dictionary"].initialize_from_df(df)
+                        st.session_state["dataset_loaded"] = True
+                        st.session_state["quality_report"] = detect_data_quality_issues(df)
+                        st.session_state["gsheet_url"] = gsheet_input
+
+                        storage_manager.create_or_update_session(
+                            session_id=active_session_id,
+                            df=df,
+                            filename=name,
+                            user_id=current_user["id"],
+                            metadata={
+                                "data_dictionary": st.session_state["dictionary"].get_all(),
+                                "gsheet_url": gsheet_input
+                            }
+                        )
+                        suggester = FixSuggester()
+                        st.session_state["proposals"] = suggester.generate_fix_proposals(df, st.session_state["quality_report"])
+                        st.success("Google Sheet loaded successfully!")
+                        st.rerun()
+                except Exception as e:
+                    st.error(str(e))
+
+        if c_sync.button("🔄 Sync Live", use_container_width=True, disabled=not st.session_state.get("gsheet_url")):
+            try:
+                with st.spinner("Syncing latest live data from Google Sheet..."):
+                    df, name = load_google_sheet(st.session_state["gsheet_url"])
+                    st.session_state["engine"].load_dataframe(df)
+                    st.session_state["quality_report"] = detect_data_quality_issues(df)
+                    storage_manager.create_or_update_session(
+                        session_id=active_session_id,
+                        df=df,
+                        filename=name,
+                        user_id=current_user["id"]
+                    )
+                    st.success("Synced latest rows from Google Sheet!")
+                    st.rerun()
+            except Exception as e:
+                st.error(str(e))
+
+    elif data_source == "Database URL":
+        st.caption("Connect to remote PostgreSQL, MySQL, or SQLite")
+        db_url = st.text_input("Database URL", placeholder="sqlite:///data.db or postgresql://...")
+        db_target = st.text_input("Table Name or SELECT Query", placeholder="e.g. sales_records or SELECT * FROM sales")
+        if st.button("Connect Database"):
+            if db_url and db_target:
+                try:
+                    with st.spinner("Connecting to external database..."):
+                        df, name = load_sql_database(db_url, db_target)
+                        st.session_state["engine"].load_dataframe(df)
+                        st.session_state["dictionary"].initialize_from_df(df)
+                        st.session_state["dataset_loaded"] = True
+                        st.session_state["quality_report"] = detect_data_quality_issues(df)
+
+                        storage_manager.create_or_update_session(
+                            session_id=active_session_id,
+                            df=df,
+                            filename=name,
+                            user_id=current_user["id"],
+                            metadata={"data_dictionary": st.session_state["dictionary"].get_all()}
+                        )
+                        st.success("Database connected and loaded successfully!")
+                        st.rerun()
+                except Exception as e:
+                    st.error(str(e))
 
     # User-Scoped Session Switcher
     saved_sessions = storage_manager.list_sessions(user_id=None if user_role == "Admin" else current_user["id"])
@@ -207,7 +289,7 @@ else:
 mode = st.sidebar.selectbox("Active Mode", allowed_modes, index=0)
 
 if mode != "User Administration" and not st.session_state["dataset_loaded"]:
-    st.info("👈 Please upload a dataset (CSV or Excel) in the sidebar or switch to a saved dataset.")
+    st.info("👈 Please upload a dataset (CSV or Excel) or connect a Google Sheet in the sidebar.")
     st.stop()
 
 engine: DuckDBEngine = st.session_state["engine"]
@@ -218,6 +300,43 @@ df_current = engine.df
 # --- DATA ANALYST MODE ---
 if mode == "Data Analyst":
     st.header("🔍 Data Analyst Panel")
+
+    # Executive Briefing Expander
+    meta = storage_manager.get_session_meta(active_session_id)
+    dataset_name = meta.get("filename", "Dataset")
+    with st.expander("📊 Executive AI Business Digest & Automated Reporting", expanded=False):
+        st.markdown("Generate an automated Chief Data Officer briefing analyzing key business KPIs, trends, and risk assessment:")
+        if st.button("Generate Executive Briefing"):
+            with st.spinner("Synthesizing executive briefing via OpenAI..."):
+                try:
+                    digest_md = generate_executive_digest(
+                        df_current,
+                        st.session_state["quality_report"],
+                        dataset_name=dataset_name
+                    )
+                    st.session_state["executive_digest"] = digest_md
+                except Exception as e:
+                    st.error(f"Failed to generate briefing: {str(e)}")
+
+        if "executive_digest" in st.session_state:
+            st.markdown(st.session_state["executive_digest"])
+            st.markdown("---")
+            d_col1, d_col2 = st.columns([1, 1])
+            with d_col1:
+                st.download_button(
+                    "📥 Export Briefing (Markdown)",
+                    data=st.session_state["executive_digest"],
+                    file_name=f"executive_digest_{dataset_name}.md",
+                    mime="text/markdown"
+                )
+            with d_col2:
+                html_report = generate_report_html(st.session_state["executive_digest"], dataset_name)
+                st.download_button(
+                    "📥 Export Printable Report (HTML)",
+                    data=html_report,
+                    file_name=f"executive_report_{dataset_name}.html",
+                    mime="text/html"
+                )
 
     # Schema & Semantic Data Dictionary Expander
     schema_info = engine.get_schema_info()
@@ -239,14 +358,35 @@ if mode == "Data Analyst":
                 dictionary.update_column(col, alias=new_alias, unit=new_unit, description=new_desc)
                 storage_manager.update_session_meta(active_session_id, {"data_dictionary": dictionary.get_all()})
 
+    # Voice & Text Query Input Section
+    st.subheader("💬 Ask Your Dataset")
+    
+    # Check for audio input (supported natively in modern Streamlit)
+    audio_val = None
+    if hasattr(st, "audio_input"):
+        audio_val = st.audio_input("🎙️ Voice Input: Click to record question")
+    else:
+        audio_val = st.file_uploader("🎙️ Voice Input (Upload audio file)", type=["wav", "mp3", "m4a"])
+
+    transcribed_text = None
+    if audio_val:
+        with st.spinner("Transcribing your voice using OpenAI Whisper..."):
+            try:
+                audio_bytes = audio_val.read()
+                transcribed_text = transcribe_audio(audio_bytes, filename="audio.wav")
+                st.info(f"🎙️ Transcribed Voice: *\"{transcribed_text}\"*")
+            except Exception as e:
+                st.error(f"Voice transcription failed: {str(e)}")
+
     user_question = st.text_input(
         "Ask a question in plain English:",
+        value=transcribed_text if transcribed_text else "",
         placeholder="e.g. What is total sales by region? What are the top 5 products by revenue?",
         key="nl_input"
     )
 
-    if st.button("Run Query") and user_question:
-        with st.spinner("Analyzing intent and generating DuckDB SQL..."):
+    if (st.button("Run Query") or (transcribed_text and st.button("Run Transcribed Query"))) and user_question:
+        with st.spinner("Analyzing intent and generating DuckDB SQL with OpenAI..."):
             converter = NLToSQLConverter()
             few_shot_ctx = few_shot.format_prompt_examples()
             result = converter.convert_and_execute(
