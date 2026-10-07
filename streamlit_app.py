@@ -22,13 +22,13 @@ from app.core.reporting import generate_executive_digest, generate_report_html
 from app.core.voice import transcribe_audio
 
 st.set_page_config(
-    page_title="DataPulse AI • Intelligent Analytics & Ingestion",
+    page_title="DataPulse AI",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN DESIGN SYSTEM & GLASSMORPHISM CSS INJECTION ---
+# --- PURE BLACK MODERN MINIMALIST DESIGN SYSTEM ---
 st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -41,11 +41,9 @@ st.markdown("""
       font-family: 'JetBrains Mono', monospace !important;
   }
 
-  /* App Background Styling */
+  /* Pure Black Background */
   .stApp {
-      background: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
-                  radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
-                  #0B0F19;
+      background: #000000 !important;
   }
 
   /* Top Navigation Bar Component */
@@ -55,12 +53,9 @@ st.markdown("""
       align-items: center;
       padding: 16px 24px;
       margin-bottom: 24px;
-      background: rgba(30, 41, 59, 0.4);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+      background: #0A0A0A;
+      border: 1px solid #1E1E1E;
+      border-radius: 14px;
   }
 
   .brand-logo {
@@ -70,75 +65,70 @@ st.markdown("""
   }
 
   .brand-icon {
-      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-      color: white;
-      width: 40px;
-      height: 40px;
+      background: #18181B;
+      border: 1px solid #27272A;
+      color: #FFFFFF;
+      width: 38px;
+      height: 38px;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
   }
 
   .brand-title {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 700;
-      color: #F8FAFC;
+      color: #FFFFFF;
       letter-spacing: -0.02em;
   }
 
   .brand-sub {
       font-size: 0.75rem;
-      color: #94A3B8;
+      color: #71717A;
       font-weight: 500;
   }
 
   .nav-status {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
   }
 
   .badge-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 12px;
+      padding: 5px 12px;
       border-radius: 9999px;
       font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.02em;
   }
 
-  .badge-admin { background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid rgba(168, 85, 247, 0.3); }
-  .badge-analyst { background: rgba(59, 130, 246, 0.15); color: #60A5FA; border: 1px solid rgba(59, 130, 246, 0.3); }
-  .badge-entry { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
-  .badge-online { background: rgba(34, 197, 94, 0.1); color: #4ADE80; border: 1px solid rgba(34, 197, 94, 0.2); }
+  .badge-role { background: #18181B; color: #E4E4E7; border: 1px solid #27272A; }
+  .badge-online { background: #0A1E11; color: #4ADE80; border: 1px solid #14532D; }
 
-  /* Glassmorphic Metric Cards */
+  /* Minimalist Black Metric Cards */
   .metric-card {
-      background: rgba(30, 41, 59, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      backdrop-filter: blur(12px);
-      border-radius: 16px;
+      background: #0A0A0A;
+      border: 1px solid #1E1E1E;
+      border-radius: 14px;
       padding: 20px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
   }
 
   .metric-card:hover {
+      border-color: #27272A;
       transform: translateY(-2px);
-      border-color: rgba(99, 102, 241, 0.4);
-      box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
   }
 
   .metric-title {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: #94A3B8;
+      color: #71717A;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 8px;
@@ -147,7 +137,7 @@ st.markdown("""
   .metric-val {
       font-size: 1.85rem;
       font-weight: 700;
-      color: #F8FAFC;
+      color: #FFFFFF;
       letter-spacing: -0.02em;
   }
 
@@ -162,42 +152,55 @@ st.markdown("""
 
   /* Query Bubble Cards */
   .query-box {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      border-radius: 14px;
-      padding: 18px;
+      background: #0A0A0A;
+      border: 1px solid #27272A;
+      border-radius: 12px;
+      padding: 16px;
       margin: 16px 0;
   }
 
   /* Buttons Styling */
   .stButton > button {
-      border-radius: 10px !important;
+      border-radius: 8px !important;
       font-weight: 600 !important;
-      letter-spacing: -0.01em !important;
+      background: #18181B !important;
+      border: 1px solid #27272A !important;
+      color: #FFFFFF !important;
       transition: all 0.2s ease !important;
   }
 
   .stButton > button:hover {
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3) !important;
+      background: #27272A !important;
+      border-color: #3F3F46 !important;
+      color: #FFFFFF !important;
   }
 
   /* Sidebar styling */
   section[data-testid="stSidebar"] {
-      background-color: #0F172A !important;
-      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      background-color: #050505 !important;
+      border-right: 1px solid #18181B;
+  }
+
+  /* Inputs */
+  .stTextInput > div > div > input {
+      background-color: #0A0A0A !important;
+      border-color: #27272A !important;
+      color: #FFFFFF !important;
+      border-radius: 8px !important;
   }
 
   /* Dataframe styling */
   .stDataFrame {
       border-radius: 12px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid #1E1E1E;
   }
 
   /* Expanders */
   .streamlit-expanderHeader {
-      background-color: rgba(30, 41, 59, 0.5) !important;
-      border-radius: 10px !important;
+      background-color: #0A0A0A !important;
+      border: 1px solid #1E1E1E !important;
+      border-radius: 8px !important;
       font-weight: 600 !important;
   }
 </style>
@@ -224,70 +227,52 @@ def do_logout():
     st.session_state["token"] = None
     st.rerun()
 
-# --- LOGIN SCREEN IF NOT AUTHENTICATED ---
+# --- CLEAN, PLAIN SIGN-IN INTERFACE ---
 if st.session_state["user"] is None:
     st.markdown("""
-    <div style="text-align: center; margin-top: 40px; margin-bottom: 30px;">
-        <div style="display: inline-flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-            <div style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); color: white; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);">⚡</div>
-            <h1 style="font-size: 2.5rem; font-weight: 800; color: #F8FAFC; margin: 0; letter-spacing: -0.03em;">DataPulse AI</h1>
+    <div style="text-align: center; margin-top: 60px; margin-bottom: 30px;">
+        <div style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="background: #18181B; border: 1px solid #27272A; color: white; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;">⚡</div>
+            <h1 style="font-size: 2.2rem; font-weight: 800; color: #FFFFFF; margin: 0; letter-spacing: -0.03em;">DataPulse AI</h1>
         </div>
-        <p style="color: #94A3B8; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Enterprise Data Intelligence, Automated Cleaning & Natural Language Analytics for Modern Teams</p>
+        <p style="color: #71717A; font-size: 0.95rem; margin: 0 auto;">Sign in to your account</p>
     </div>
     """, unsafe_allow_html=True)
 
-    c_left, c_mid, c_right = st.columns([1, 2, 1])
+    c_left, c_mid, c_right = st.columns([1, 1.2, 1])
 
     with c_mid:
         st.markdown("""
-        <div style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 28px; backdrop-filter: blur(20px); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);">
+        <div style="background: #0A0A0A; border: 1px solid #1E1E1E; border-radius: 16px; padding: 28px;">
         """, unsafe_allow_html=True)
         
-        auth_mode = st.radio("Access Portal", ["Sign In", "Create Account"], horizontal=True)
+        auth_mode = st.radio("Access", ["Sign In", "Create Account"], horizontal=True, label_visibility="collapsed")
 
         if auth_mode == "Sign In":
             with st.form("login_form"):
-                email = st.text_input("Work Email", value="admin@demo.com")
-                password = st.text_input("Password", type="password", value="admin123")
-                submitted = st.form_submit_button("Sign In to Workspace", use_container_width=True)
+                email = st.text_input("Email", placeholder="name@company.com")
+                password = st.text_input("Password", type="password", placeholder="••••••••")
+                submitted = st.form_submit_button("Sign In", use_container_width=True)
                 if submitted:
                     if do_login(email, password):
-                        st.success(f"Welcome back, {st.session_state['user']['username']}!")
+                        st.success("Signed in successfully.")
                         st.rerun()
                     else:
-                        st.error("Invalid credentials.")
+                        st.error("Invalid email or password.")
         else:
             with st.form("register_form"):
-                reg_name = st.text_input("Full Name", value="New User")
-                reg_email = st.text_input("Work Email")
-                reg_pass = st.text_input("Password", type="password")
-                reg_role = st.selectbox("Role Permission", ["Analyst", "DataEntry"])
-                reg_submit = st.form_submit_button("Create Workspace Account", use_container_width=True)
+                reg_name = st.text_input("Full Name", placeholder="Jane Doe")
+                reg_email = st.text_input("Email", placeholder="name@company.com")
+                reg_pass = st.text_input("Password", type="password", placeholder="••••••••")
+                reg_submit = st.form_submit_button("Create Account", use_container_width=True)
                 if reg_submit:
                     try:
-                        new_u = UserManager.create_user(reg_email, reg_name, reg_pass, reg_role)
+                        new_u = UserManager.create_user(reg_email, reg_name, reg_pass, role="Analyst")
                         do_login(reg_email, reg_pass)
-                        st.success("Account created successfully!")
+                        st.success("Account created successfully.")
                         st.rerun()
                     except Exception as e:
                         st.error(str(e))
-
-        st.markdown("<hr style='border-color: rgba(255,255,255,0.06); margin: 24px 0;'>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-bottom: 12px;'>⚡ Instant Demo Sandbox Roles</div>", unsafe_allow_html=True)
-
-        d1, d2, d3 = st.columns(3)
-        with d1:
-            if st.button("👑 Admin", use_container_width=True):
-                do_login("admin@demo.com", "admin123")
-                st.rerun()
-        with d2:
-            if st.button("📊 Analyst", use_container_width=True):
-                do_login("analyst@demo.com", "analyst123")
-                st.rerun()
-        with d3:
-            if st.button("✏️ Data Entry", use_container_width=True):
-                do_login("dataentry@demo.com", "entry123")
-                st.rerun()
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -329,27 +314,20 @@ if "session_id" not in st.session_state or st.session_state["session_id"] != act
         st.session_state["dataset_loaded"] = True
         st.session_state["gsheet_url"] = meta.get("gsheet_url")
 
-# Role badge mapping
-role_badge_class = {
-    "Admin": "badge-admin",
-    "Analyst": "badge-analyst",
-    "DataEntry": "badge-entry"
-}.get(user_role, "badge-admin")
-
-# Top Modern Navbar
+# Top Minimalist Black Navbar
 st.markdown(f"""
 <div class="top-navbar">
     <div class="brand-logo">
         <div class="brand-icon">⚡</div>
         <div>
             <div class="brand-title">DataPulse AI</div>
-            <div class="brand-sub">Session: {active_session_id[:8]}... • Cloud Active</div>
+            <div class="brand-sub">Session: {active_session_id[:8]}...</div>
         </div>
     </div>
     <div class="nav-status">
-        <span class="badge-pill badge-online">● DuckDB Engine Online</span>
-        <span class="badge-pill {role_badge_class}">{user_role.upper()}</span>
-        <span style="color: #F8FAFC; font-weight: 600; font-size: 0.9rem;">{current_user['username']}</span>
+        <span class="badge-pill badge-online">● Online</span>
+        <span class="badge-pill badge-role">{user_role.upper()}</span>
+        <span style="color: #FFFFFF; font-weight: 600; font-size: 0.85rem;">{current_user['username']}</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -357,23 +335,22 @@ st.markdown(f"""
 # Sidebar Design
 with st.sidebar:
     st.markdown(f"""
-    <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
-        <div style="font-size: 0.95rem; font-weight: 700; color: #F8FAFC;">{current_user['username']}</div>
-        <div style="font-size: 0.8rem; color: #94A3B8;">{current_user['email']}</div>
-        <div style="margin-top: 8px;"><span class="badge-pill {role_badge_class}">{user_role}</span></div>
+    <div style="background: #0A0A0A; border: 1px solid #1E1E1E; border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+        <div style="font-size: 0.9rem; font-weight: 700; color: #FFFFFF;">{current_user['username']}</div>
+        <div style="font-size: 0.78rem; color: #71717A;">{current_user['email']}</div>
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("Log Out", use_container_width=True):
+    if st.button("Sign Out", use_container_width=True):
         do_logout()
 
     st.markdown("---")
     st.subheader("Data Ingestion")
 
-    data_source = st.radio("Source Type", ["File Upload", "Google Sheets", "Database URL"], horizontal=True)
+    data_source = st.radio("Source", ["File Upload", "Google Sheets", "Database URL"], horizontal=True)
 
     if data_source == "File Upload":
-        uploaded_file = st.file_uploader("Upload CSV / XLSX", type=["csv", "xlsx", "xls"])
+        uploaded_file = st.file_uploader("Upload CSV or XLSX", type=["csv", "xlsx", "xls"])
         if uploaded_file is not None:
             if not st.session_state["dataset_loaded"] or st.button("Process File", use_container_width=True):
                 with st.spinner("Analyzing schema & quality..."):
@@ -470,10 +447,10 @@ with st.sidebar:
     saved_sessions = storage_manager.list_sessions(user_id=None if user_role == "Admin" else current_user["id"])
     if saved_sessions:
         st.markdown("---")
-        st.subheader("Saved Workspaces")
+        st.subheader("Saved Datasets")
         session_options = {f"{s['filename']} ({s['session_id'][:6]}...)": s['session_id'] for s in saved_sessions}
-        selected_label = st.selectbox("Switch Workspace", list(session_options.keys()))
-        if st.button("Switch", use_container_width=True):
+        selected_label = st.selectbox("Switch", list(session_options.keys()))
+        if st.button("Open", use_container_width=True):
             st.query_params["session_id"] = session_options[selected_label]
             st.rerun()
 
@@ -488,10 +465,10 @@ else:
     allowed_modes = ["Data Analyst"]
 
 st.sidebar.markdown("---")
-mode = st.sidebar.selectbox("Workspace Mode", allowed_modes, index=0)
+mode = st.sidebar.selectbox("Mode", allowed_modes, index=0)
 
 if mode != "User Administration" and not st.session_state["dataset_loaded"]:
-    st.info("👈 Connect a dataset (Upload CSV, connect Google Sheets or SQL) in the sidebar to begin analysis.")
+    st.info("👈 Connect a dataset in the sidebar to begin analysis.")
     st.stop()
 
 engine: DuckDBEngine = st.session_state["engine"]
@@ -504,7 +481,7 @@ if mode == "Data Analyst":
     meta = storage_manager.get_session_meta(active_session_id)
     dataset_name = meta.get("filename", "Dataset")
 
-    # High-impact Glassmorphic Metric Cards
+    # Black Minimalist Metric Cards
     schema_info = engine.get_schema_info()
     qr = st.session_state["quality_report"]
     
@@ -514,35 +491,35 @@ if mode == "Data Analyst":
         <div class="metric-card">
             <div class="metric-title">Active Rows</div>
             <div class="metric-val">{schema_info['row_count']:,}</div>
-            <span class="metric-badge" style="background: rgba(99, 102, 241, 0.15); color: #818CF8;">In-Memory DuckDB</span>
+            <span class="metric-badge" style="background: #18181B; color: #A1A1AA;">DuckDB</span>
         </div>
         """, unsafe_allow_html=True)
     with kpi2:
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">Dimensions & Features</div>
+            <div class="metric-title">Columns</div>
             <div class="metric-val">{schema_info['col_count']}</div>
-            <span class="metric-badge" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA;">Indexed Columns</span>
+            <span class="metric-badge" style="background: #18181B; color: #A1A1AA;">Indexed</span>
         </div>
         """, unsafe_allow_html=True)
     with kpi3:
         issue_count = qr['total_issues'] if qr else 0
-        issue_badge_bg = "rgba(244, 63, 94, 0.15)" if issue_count > 0 else "rgba(16, 185, 129, 0.15)"
-        issue_badge_col = "#FB7185" if issue_count > 0 else "#34D399"
+        issue_badge_bg = "#271B1D" if issue_count > 0 else "#0A1E11"
+        issue_badge_col = "#F87171" if issue_count > 0 else "#4ADE80"
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">Data Quality Issues</div>
+            <div class="metric-title">Data Issues</div>
             <div class="metric-val">{issue_count}</div>
-            <span class="metric-badge" style="background: {issue_badge_bg}; color: {issue_badge_col};">{"Attention Required" if issue_count > 0 else "Clean Baseline"}</span>
+            <span class="metric-badge" style="background: {issue_badge_bg}; color: {issue_badge_col};">{"Flagged" if issue_count > 0 else "Clean"}</span>
         </div>
         """, unsafe_allow_html=True)
     with kpi4:
         query_count = len(meta.get("query_history", []))
         st.markdown(f"""
         <div class="metric-card">
-            <div class="metric-title">NL Queries Run</div>
+            <div class="metric-title">Queries Run</div>
             <div class="metric-val">{query_count}</div>
-            <span class="metric-badge" style="background: rgba(168, 85, 247, 0.15); color: #C084FC;">AI Learning Enabled</span>
+            <span class="metric-badge" style="background: #18181B; color: #A1A1AA;">AI Memory</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -587,12 +564,12 @@ if mode == "Data Analyst":
                 storage_manager.update_session_meta(active_session_id, {"data_dictionary": dictionary.get_all()})
 
     # Voice & Natural Language Query Box
-    st.subheader("💬 Ask Your Dataset")
+    st.subheader("Ask Your Dataset")
     
-    # Modern Audio input
+    # Audio input
     audio_val = None
     if hasattr(st, "audio_input"):
-        audio_val = st.audio_input("🎙️ Voice Input (Microphone)")
+        audio_val = st.audio_input("🎙️ Voice Input")
     else:
         audio_val = st.file_uploader("🎙️ Voice Input (Upload audio)", type=["wav", "mp3", "m4a"])
 
@@ -611,7 +588,7 @@ if mode == "Data Analyst":
         user_question = st.text_input(
             "Natural Language Query",
             value=transcribed_text if transcribed_text else "",
-            placeholder="e.g. What is total sales grouped by region? Top 5 customers by revenue?",
+            placeholder="e.g. Total sales grouped by region? Top 5 products by revenue?",
             key="nl_input",
             label_visibility="collapsed"
         )
@@ -644,8 +621,8 @@ if mode == "Data Analyst":
 
         st.markdown(f"""
         <div class="query-box">
-            <div style="font-weight: 700; color: #F8FAFC; margin-bottom: 8px;">🔍 Query: {res['question']}</div>
-            <div style="font-size: 0.8rem; color: #94A3B8;">Executed SQL (DuckDB):</div>
+            <div style="font-weight: 700; color: #FFFFFF; margin-bottom: 8px;">Query: {res['question']}</div>
+            <div style="font-size: 0.8rem; color: #71717A;">Executed SQL:</div>
         </div>
         """, unsafe_allow_html=True)
         st.code(res["sql"], language="sql")
@@ -667,16 +644,16 @@ if mode == "Data Analyst":
                     fig = generate_plotly_figure(df_res, selected_chart, def_x, def_y)
                     if fig:
                         fig.update_layout(
-                            paper_bgcolor="rgba(0,0,0,0)",
-                            plot_bgcolor="rgba(0,0,0,0)",
-                            font=dict(color="#F8FAFC", family="Plus Jakarta Sans"),
+                            paper_bgcolor="#000000",
+                            plot_bgcolor="#000000",
+                            font=dict(color="#FFFFFF", family="Plus Jakarta Sans"),
                             colorway=["#6366F1", "#10B981", "#F59E0B", "#EC4899", "#06B6D4"]
                         )
                         st.plotly_chart(fig, use_container_width=True)
 
 # --- DATA ENTRY MODE ---
 elif mode == "Data Entry":
-    st.header("✏️ Data Entry & Quality Review")
+    st.header("Data Entry & Quality Review")
 
     qr = st.session_state["quality_report"]
     m1, m2, m3, m4 = st.columns(4)
@@ -715,9 +692,9 @@ elif mode == "Data Entry":
     else:
         for idx, prop in enumerate(proposals):
             st.markdown(f"""
-            <div style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px; margin-bottom: 16px;">
-                <div style="font-size: 1.05rem; font-weight: 700; color: #F8FAFC;">Fix #{idx + 1}: {prop['explanation']}</div>
-                <div style="font-size: 0.8rem; color: #94A3B8; margin-bottom: 12px;">Operation: <code style="color: #818CF8;">{prop['operation']}</code> • Target: <code>{prop.get('target_column', 'N/A')}</code></div>
+            <div style="background: #0A0A0A; border: 1px solid #1E1E1E; border-radius: 12px; padding: 18px; margin-bottom: 16px;">
+                <div style="font-size: 1.05rem; font-weight: 700; color: #FFFFFF;">Fix #{idx + 1}: {prop['explanation']}</div>
+                <div style="font-size: 0.8rem; color: #71717A; margin-bottom: 12px;">Operation: <code style="color: #A1A1AA;">{prop['operation']}</code> • Target: <code>{prop.get('target_column', 'N/A')}</code></div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -817,7 +794,7 @@ elif mode == "Data Entry":
 
 # --- ADMIN PANEL ---
 elif mode == "User Administration" and user_role == "Admin":
-    st.header("👥 User Administration & RBAC Management")
+    st.header("User Administration & RBAC Management")
     users = UserManager.list_users()
     users_df = pd.DataFrame(users)
     users_df["created_at"] = pd.to_datetime(users_df["created_at"], unit="s")
